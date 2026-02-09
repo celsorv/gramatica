@@ -29,6 +29,14 @@ import java.util.Scanner;
 
 public class FunilGrafico {
 
+    public static final String RESET = "\u001B[0m";
+    public static final String VERMELHO = "\u001B[31m";
+    public static final String VERDE = "\u001B[32m";
+    public static final String AMARELO = "\u001B[33m";
+    public static final String AZUL = "\u001B[34m";
+    public static final String ROXO = "\u001B[35m";
+    public static final String CIANO = "\u001B[36m";
+
     enum Classificacao {
         MONOSSILABO_TONICO, OXITONA, PAROXITONA, PROPAROXITONA, NAO_IDENTIFICADA
     }
@@ -45,7 +53,7 @@ public class FunilGrafico {
         Scanner sc = new Scanner(System.in);
 
         while (true) {
-            System.out.println("\nDigite a palavra (ex: sa-Ú-de, ba-Ú, PAS-sa-ro) ou FIM:");
+            System.out.println(RESET + "\nDigite a palavra (ex: sa-Ú-de, ba-Ú, PAS-sa-ro) ou FIM:");
             String entrada = sc.nextLine();
             if (entrada.equalsIgnoreCase("FIM")) break;
 
@@ -58,28 +66,28 @@ public class FunilGrafico {
             DetalheHiato hiato = encontrarHiatoTonico(silabas, indiceTonica);
 
             if (Classificacao.PROPAROXITONA.equals(classe)) {
-                System.out.println("TÔNICA ACENTUADA: Proparossítona");
+                System.out.println(AZUL + "TÔNICA ACENTUADA: Proparossítona" + RESET);
 
             } else if (isHiatoTonicoValido(hiato, silabas, indiceTonica, classe)) {
-                System.out.println("TÔNICA ACENTUADA: Hiato I/U tônico");
+                System.out.println(CIANO + "TÔNICA ACENTUADA: Hiato I/U tônico" + RESET);
 
             } else if (isOxitonaComDitongoAberto(silabas, indiceTonica, classe)) {
-                System.out.println("TÔNICA ACENTUADA: Oxítona com ditongo aberto (ÉI, ÓI, ÉU)");
+                System.out.println(AMARELO + "TÔNICA ACENTUADA: Oxítona com ditongo aberto (ÉI, ÓI, ÉU)" + RESET);
 
             } else if (isMonosilaboTonicoValido(silabas, classe)) {
-                System.out.println("TÔNICA ACENTUADA: Monossílabo tônico terminado em a(s), e(s), o(s)");
+                System.out.println(VERDE + "TÔNICA ACENTUADA: Monossílabo tônico terminado em a(s), e(s), o(s)" + RESET);
 
             } else if (isOxitonaValida(silabas, classe)) {
-                System.out.println("TÔNICA ACENTUADA: Oxítona terminada em a(s), e(s), o(s), em(ens)");
-
-            } else if (isParoxitonaValida(silabas, classe)) {
-                System.out.println("TÔNICA ACENTUADA: Paroxítona NÃO TERMINADA em a(s), e(s), o(s), em(ens)");
+                System.out.println(AMARELO + "TÔNICA ACENTUADA: Oxítona terminada em a(s), e(s), o(s), em(ens)" + RESET);
 
             } else if (isParoxitonaTerminadaEmDitongo(silabas, indiceTonica, classe)) {
-                System.out.println("TÔNICA ACENTUADA: Paroxitona terminada em ditongo");
+                System.out.println(ROXO + "TÔNICA ACENTUADA: Paroxitona terminada em ditongo" + RESET);
+
+            } else if (isParoxitonaValida(silabas, classe)) {
+                System.out.println(ROXO + "TÔNICA ACENTUADA: Paroxítona NÃO TERMINADA em a(s), e(s), o(s), em(ens)"+ RESET);
 
             } else {
-                System.out.println("NÃO É uma palavra acentuada!");
+                System.out.println(VERMELHO + "NÃO É uma palavra acentuada!" + RESET);
             }
         }
 
@@ -87,7 +95,7 @@ public class FunilGrafico {
     }
 
     private static boolean isOxitonaComDitongoAberto(String[] silabas, int indiceTonica, Classificacao classe) {
-        if (indiceTonica != 0 || !hasDitongo(silabas, indiceTonica)) return false;
+        if (indiceTonica != silabas.length - 1 || !hasDitongo(silabas, indiceTonica)) return false;
         String busca = silabas[indiceTonica].toLowerCase();
         return busca.matches(".*(ei|oi|eu).*");
     }
@@ -103,7 +111,7 @@ public class FunilGrafico {
 
         // Padrão: termina com a(s), e(s), o(s), em ou ens
         // O $ garante que a correspondência seja no final da string
-        return ultimaSilaba.matches(".*(a|as|e|es|o|os|em|ens)$");
+        return ultimaSilaba.matches(".*([aeo]s?|em|ens)$");
     }
 
     private static boolean isParoxitonaValida(String[] silabas, Classificacao classe) {
@@ -113,7 +121,7 @@ public class FunilGrafico {
 
         // Padrão: termina com a(s), e(s), o(s), em ou ens
         // O $ garante que a correspondência seja no final da string
-        return !ultimaSilaba.matches(".*(a|as|e|es|o|os|em|ens)$");
+        return !ultimaSilaba.matches(".*([aeo]s?|em|ens)$");
     }
 
     private static boolean isMonosilaboTonicoValido(String[] silabas, Classificacao classe) {
@@ -212,27 +220,20 @@ public class FunilGrafico {
         return false;
     }
 
-    private static boolean hasTritongo(String[] silabas, int index) {
-        if (index >= 0 && index < silabas.length) {
-            return contarVogaisSeguidas(silabas[index]) == 3;
-        }
-        return false;
-    }
-
     private static int contarVogaisSeguidas(String silaba) {
-        int maxSeguidas = 0;
-        int atual = 0;
+        // Remove o 's' ou 'S' do final apenas para a contagem
+        String base = silaba.toLowerCase().replaceAll("s$", "");
 
-        for (char c : silaba.toCharArray()) {
-            if (isVogal(c)) {
-                atual++;
-                maxSeguidas = Math.max(maxSeguidas, atual);
+        int count = 0;
+        // Conta quantas vogais existem sequencialmente de trás para frente
+        for (int i = base.length() - 1; i >= 0; i--) {
+            if (isVogal(base.charAt(i))) {
+                count++;
             } else {
-                atual = 0;
+                break; // Paramos na primeira consoante encontrada
             }
         }
-
-        return maxSeguidas;
+        return count;
     }
 
     private static boolean isVogal(char c) {
